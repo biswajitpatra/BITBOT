@@ -8,7 +8,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Path;
+import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
@@ -20,11 +22,13 @@ public class acc_service extends AccessibilityService {
     int password[]={3,2,1,5,7,8,9};
     AccessibilityNodeInfo mNodeInfo;
     AccessibilityNodeInfo parentInfo;
-    SharedPreferences sp;
+    SharedPreferences sf;
+    SharedPreferences.Editor sfe;
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        sp=getSharedPreferences("command",MODE_PRIVATE);
+        sf=getSharedPreferences("command",MODE_PRIVATE);
+        sfe=sf.edit();
         mNodeInfo = event.getSource();
         if(mNodeInfo==null)
             return;
@@ -32,7 +36,7 @@ public class acc_service extends AccessibilityService {
         Nodeprinter(parentInfo, "");
         if(parentInfo!=null)
             actiontaken(parentInfo);
-        if(sp.getBoolean("doexe",false)==true&&!isMyServiceRunning(acc_service.class))
+        if(sf.getBoolean("doexe",false)==true&&!isMyServiceRunning(acc_service.class))
           executeaction(parentInfo);
         else
             Log.e(":::","Either false execution or service running before");
@@ -53,7 +57,10 @@ public class acc_service extends AccessibilityService {
         return false;
     }
     public void executeaction(AccessibilityNodeInfo node){
+
          Log.v("::::","work done ");
+         sfe.putBoolean("doexe",false);
+         sfe.apply();
     }
     private void actiontaken(AccessibilityNodeInfo node) {
         if (node.getChildCount() >= 1) {
@@ -101,12 +108,34 @@ public class acc_service extends AccessibilityService {
         }
 
     }
+    public void openapp(String appname){
+            Intent li = getPackageManager().getLaunchIntentForPackage(appname);
+            startActivity(li);
+    }
+
+    public boolean clickview(AccessibilityNodeInfo nb){
+        if(!nb.isClickable()){
+            Log.e("::::>","Not clickable entity >"+ mNodeInfo.getViewIdResourceName());
+            return false;
+        }
+          nb.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+          return true;
+     }
+
+     public void writeview(AccessibilityNodeInfo nb,String tt){
+        Bundle bd =new Bundle();
+         bd.putString(AccessibilityNodeInfoCompat.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, tt);
+         nb.performAction(AccessibilityNodeInfoCompat.ACTION_SET_TEXT, bd);
+     }
+
+
     private AccessibilityNodeInfo gettosource(AccessibilityNodeInfo node){
         if(node.getParent()==null)
             return node;
         else
             return gettosource(node.getParent());
     }
+
     private void Nodeprinter(AccessibilityNodeInfo mNodeInfo,String logu){
         if(mNodeInfo == null) return ;
         String log = "";
