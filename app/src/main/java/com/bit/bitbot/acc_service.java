@@ -2,8 +2,11 @@ package com.bit.bitbot;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
+import android.app.ActivityManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Path;
 import android.os.IBinder;
 import android.util.DisplayMetrics;
@@ -17,8 +20,11 @@ public class acc_service extends AccessibilityService {
     int password[]={3,2,1,5,7,8,9};
     AccessibilityNodeInfo mNodeInfo;
     AccessibilityNodeInfo parentInfo;
+    SharedPreferences sp;
+
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
+        sp=getSharedPreferences("command",MODE_PRIVATE);
         mNodeInfo = event.getSource();
         if(mNodeInfo==null)
             return;
@@ -26,12 +32,28 @@ public class acc_service extends AccessibilityService {
         Nodeprinter(parentInfo, "");
         if(parentInfo!=null)
             actiontaken(parentInfo);
+        if(sp.getBoolean("doexe",false)==true&&!isMyServiceRunning(acc_service.class))
+          executeaction(parentInfo);
+        else
+            Log.e(":::","Either false execution or service running before");
         Log.v("FINAL:::", String.format("onAccessibilityEvent: type = [ %s ], class = [ %s ], package = [ %s ], time = [ %s ], text = [ %s ]", event.getEventType(), event.getClassName(), event.getPackageName(), event.getEventTime(), event.getText()));
     }
 
     @Override
     public void onInterrupt() {
 
+    }
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public void executeaction(AccessibilityNodeInfo node){
+         Log.v("::::","work done ");
     }
     private void actiontaken(AccessibilityNodeInfo node) {
         if (node.getChildCount() >= 1) {
@@ -85,7 +107,6 @@ public class acc_service extends AccessibilityService {
         else
             return gettosource(node.getParent());
     }
-
     private void Nodeprinter(AccessibilityNodeInfo mNodeInfo,String logu){
         if(mNodeInfo == null) return ;
         String log = "";
