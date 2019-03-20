@@ -1,0 +1,9 @@
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeViewClicked|typeViewFocused|typeWindowContentChanged|typeWindowsChanged"
+    android:accessibilityFeedbackType="feedbackSpoken"
+    android:notificationTimeout="1000"
+    android:settingsActivity="com.bit.quizbot.MainActivity"
+    android:canRetrieveWindowContent="true"
+    android:accessibilityFlags="flagReportViewIds"
+    android:canPerformGestures="true"
+    />
