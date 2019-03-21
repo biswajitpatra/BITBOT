@@ -16,6 +16,9 @@ import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 public class acc_service extends AccessibilityService {
     public acc_service() {
     }
@@ -36,10 +39,13 @@ public class acc_service extends AccessibilityService {
         Nodeprinter(parentInfo, "");
         if(parentInfo!=null)
             actiontaken(parentInfo);
-        if(sf.getBoolean("doexe",false)==true&&!isMyServiceRunning(acc_service.class))
-          executeaction(parentInfo);
-        else
-            Log.e(":::","Either false execution or service running before");
+        //if(sf.getBoolean("doexe",false)==true&&!isMyServiceRunning(acc_service.class))
+        if(sf.getBoolean("doexe",false)==true)
+            executeaction(parentInfo);
+        else if(isMyServiceRunning(acc_service.class))
+            Log.e(":::","service running before");
+        else if(sf.getBoolean("doexe",false)==false)
+            Log.e(":::","service not started");
         Log.v("FINAL:::", String.format("onAccessibilityEvent: type = [ %s ], class = [ %s ], package = [ %s ], time = [ %s ], text = [ %s ]", event.getEventType(), event.getClassName(), event.getPackageName(), event.getEventTime(), event.getText()));
     }
 
@@ -56,11 +62,57 @@ public class acc_service extends AccessibilityService {
         }
         return false;
     }
-    public void executeaction(AccessibilityNodeInfo node){
+    public void errorch(){
 
-         Log.v("::::","work done ");
-         sfe.putBoolean("doexe",false);
-         sfe.apply();
+        try {
+            Method[] m = getClass().getDeclaredMethods();
+            for (int i = 0; i < m.length; i++)
+                Log.v("trial :::",m[i].toString());
+        } catch (Throwable e) {
+            System.err.println(e);
+        }
+
+
+        sfe.putBoolean("doexe",false);
+        sfe.apply();
+    }
+    public void executeaction(AccessibilityNodeInfo node){
+             String commsp[]= sf.getString("commf","##").split("\n");
+             String cmmp=commsp[sf.getInt("stepno",0)];
+
+             String cofromst=cmmp.substring(1,cmmp.indexOf(">")).replaceAll(" ","_");
+             String pafromst=(cmmp.endsWith(">"))?"":cmmp.substring(cmmp.indexOf(">")+2);
+             Log.v(":::EXECUTING","command:"+cofromst+"\nparameters:"+pafromst);
+
+             if(cofromst.equals("quit")){
+                 sfe.putBoolean("doexe",false);
+                 sfe.apply();
+                 return;
+             }
+             try {
+                 getClass().getDeclaredMethod("f"+cofromst,AccessibilityNodeInfo.class,String.class).invoke(this,node,pafromst);
+             } catch (NoSuchMethodException e) {
+                 e.printStackTrace();
+                 errorch();
+             } catch (IllegalAccessException e) {
+                 e.printStackTrace();
+                 errorch();
+             } catch (InvocationTargetException e) {
+                 e.printStackTrace();
+                 errorch();
+             }
+/*
+             try {
+                 Thread.sleep(2000);
+             } catch (InterruptedException e) {
+                 e.printStackTrace();
+                 errorch();
+             }
+*/
+
+             Log.v("::::","step done ");
+             sfe.putInt("stepno",sf.getInt("stepno",0)+1);
+             sfe.apply();
     }
     private void actiontaken(AccessibilityNodeInfo node) {
         if (node.getChildCount() >= 1) {
@@ -108,25 +160,6 @@ public class acc_service extends AccessibilityService {
         }
 
     }
-    public void openapp(String appname){
-            Intent li = getPackageManager().getLaunchIntentForPackage(appname);
-            startActivity(li);
-    }
-
-    public boolean clickview(AccessibilityNodeInfo nb){
-        if(!nb.isClickable()){
-            Log.e("::::>","Not clickable entity >"+ mNodeInfo.getViewIdResourceName());
-            return false;
-        }
-          nb.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-          return true;
-     }
-
-     public void writeview(AccessibilityNodeInfo nb,String tt){
-        Bundle bd =new Bundle();
-         bd.putString(AccessibilityNodeInfoCompat.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, tt);
-         nb.performAction(AccessibilityNodeInfoCompat.ACTION_SET_TEXT, bd);
-     }
 
 
     private AccessibilityNodeInfo gettosource(AccessibilityNodeInfo node){
@@ -148,6 +181,32 @@ public class acc_service extends AccessibilityService {
         }
 
     }
+
+    private void findnode(AccessibilityNodeInfo nd,String tt){
+        if(nd==null) return;
+
+    }
+
+
+
+
+
+    public void fopen_app(AccessibilityNodeInfo nb,String appname){
+        Intent li = getPackageManager().getLaunchIntentForPackage(appname);
+        startActivity(li);
+    }
+
+    public void fclick(AccessibilityNodeInfo nb,String param){
+
+        nb.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+    }
+
+    public void ftype(AccessibilityNodeInfo nb,String tt){
+        Bundle bd =new Bundle();
+        bd.putString(AccessibilityNodeInfoCompat.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, tt);
+        nb.performAction(AccessibilityNodeInfoCompat.ACTION_SET_TEXT, bd);
+    }
+
 
 
 }

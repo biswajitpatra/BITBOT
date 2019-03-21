@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
     SharedPreferences sf;
     SharedPreferences.Editor sfe;
 
-    String command_words[]={"open app","open","write","type","quit","close"};
+    String command_words[]={"open lock","open app","open","write","type","quit","close","click"};
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -28,7 +28,11 @@ public class MainActivity extends AppCompatActivity {
 
         sf= getSharedPreferences("command",MODE_PRIVATE);
         sfe=sf.edit();
-
+        EditText ed2=findViewById(R.id.editText2);
+        ed2.setFocusable(false);
+        ed2.setFocusableInTouchMode(false);
+        ed2.setClickable(false);
+        printcomm(sf.getString("commf","NONE"));
         EditText ed=findViewById(R.id.editText);
         ed.setText(sf.getString("com","NONE"));
         ed.addTextChangedListener(new TextWatcher() {
@@ -93,18 +97,34 @@ public class MainActivity extends AppCompatActivity {
         cmdt=String.join("\n",ttsp);
         sfe.putString("commf",cmdt);
         sfe.apply();
-        //cmdt.replace("<","<font color=\'#EE0000\' ");
+        printcomm(cmdt);
+        /*
+        cmdt=cmdt.replace("<","<<");
+        cmdt=cmdt.replace(">",">>");
+        cmdt=cmdt.replace("<<","<font color='red'>");
+        cmdt=cmdt.replace(">>","</font>");
+        cmdt=cmdt.replace("\n","</br>");
         //cmdt.replace(">"," />");
+        Log.v("::: trial",cmdt);
         EditText ed2=findViewById(R.id.editText2);
-        //ed2.setText(Html.fromHtml(cmdt));
-        ed2.setText(cmdt);
+        ed2.setText(Html.fromHtml(cmdt));
+        //ed2.setText(cmdt);
+        */
     }
     public void executest(View v){
          sfe.putBoolean("doexe",true);
          sfe.putInt("stepno",0);
          sfe.apply();
+    }
 
-
-
+    public void printcomm(String ss){
+        ss=ss.replace("<","<<");
+        ss=ss.replace(">",">>");
+        ss=ss.replace("<<","<font color='red'><b>");
+        ss=ss.replace(">>","</b></font>");
+        ss=ss.replace("\n","<br>");
+        //Log.v("::: trial",ss);
+        EditText ed2=findViewById(R.id.editText2);
+        ed2.setText(Html.fromHtml(ss));
     }
 }
