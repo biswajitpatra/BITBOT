@@ -18,6 +18,9 @@ import android.view.accessibility.AccessibilityNodeInfo;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class acc_service extends AccessibilityService {
     public acc_service() {
@@ -30,6 +33,8 @@ public class acc_service extends AccessibilityService {
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
+
+
         sf=getSharedPreferences("command",MODE_PRIVATE);
         sfe=sf.edit();
         mNodeInfo = event.getSource();
@@ -37,10 +42,10 @@ public class acc_service extends AccessibilityService {
             return;
         parentInfo =gettosource(mNodeInfo);
         Nodeprinter(parentInfo, "");
-        if(parentInfo!=null)
-            actiontaken(parentInfo);
+       // if(parentInfo!=null)
+       //     actiontaken(parentInfo);
         //if(sf.getBoolean("doexe",false)==true&&!isMyServiceRunning(acc_service.class))
-        if(sf.getBoolean("doexe",false)==true)
+        if(sf.getBoolean("doexe",false)==true&&parentInfo!=null)
             executeaction(parentInfo);
         else if(isMyServiceRunning(acc_service.class))
             Log.e(":::","service running before");
@@ -63,7 +68,7 @@ public class acc_service extends AccessibilityService {
         return false;
     }
     public void errorch(){
-
+/*
         try {
             Method[] m = getClass().getDeclaredMethods();
             for (int i = 0; i < m.length; i++)
@@ -72,11 +77,19 @@ public class acc_service extends AccessibilityService {
             System.err.println(e);
         }
 
-
+*/
         sfe.putBoolean("doexe",false);
         sfe.apply();
     }
     public void executeaction(AccessibilityNodeInfo node){
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            errorch();
+        }
+        node=getRootInActiveWindow();
+
              String commsp[]= sf.getString("commf","##").split("\n");
              String cmmp=commsp[sf.getInt("stepno",0)];
 
@@ -181,9 +194,43 @@ public class acc_service extends AccessibilityService {
         }
 
     }
+    private AccessibilityNodeInfo getnode(AccessibilityNodeInfo nd,String ssp,boolean clicka){
+        /*List<String> sspp= new ArrayList<String>();
+        sspp.addAll(Arrays.asList(ssp.split(".")));
+        sspp.remove(0);*/
+        String sspp[]=ssp.substring(1).split(".");
+        AccessibilityNodeInfo cnd=nd;
+        for(String z:sspp){
 
-    private void findnode(AccessibilityNodeInfo nd,String tt){
-        if(nd==null) return;
+            nd=nd.getChild(Integer.getInteger(z));
+            if(nd.isClickable())
+                cnd=nd;
+        }
+        if(clicka==true)
+        return cnd;
+        else
+            return nd;
+    }
+
+    String shortestfn="";//always initialize shortestfn while findnode function calling
+    private String findnode(AccessibilityNodeInfo mNodeInfo,String tt,String logu){
+        if(mNodeInfo == null) return "NONE";
+        //String log = "";
+        //log= logu+ "("+mNodeInfo.getText()+"=="+((mNodeInfo.getViewIdResourceName() != null)?mNodeInfo.getViewIdResourceName():"NO VIEW ID")+"("+((mNodeInfo.isClickable())?"CLICKABLE":"")+")"+ "<--"+((mNodeInfo.getParent() != null)?mNodeInfo.getParent().getViewIdResourceName():"NO PARENT")+")";
+        //Log.d("::::", log);
+        if(mNodeInfo.getText()!=null)
+        if(mNodeInfo.getText().toString().toLowerCase().contains(tt.toLowerCase())&&(shortestfn.length()==0||shortestfn.length()>logu.length())) {
+            shortestfn = logu;
+            return logu;
+        }
+        if(mNodeInfo.getChildCount()==0) return "NONC";
+        for(int i = 0; i < mNodeInfo.getChildCount(); i++){
+            findnode(mNodeInfo.getChild(i),tt,logu+"."+String.valueOf(i));
+           //if(!retf.equals("NONE"))
+               // return retf;
+        }
+
+        return shortestfn;
 
     }
 
@@ -196,8 +243,11 @@ public class acc_service extends AccessibilityService {
         startActivity(li);
     }
 
-    public void fclick(AccessibilityNodeInfo nb,String param){
-
+    public void fopen(AccessibilityNodeInfo nb,String param){
+        shortestfn="";
+        Log.v("::: trialclick",findnode(nb,param,""));
+        shortestfn="";
+        nb=getnode(nb,findnode(nb,param,""),true);
         nb.performAction(AccessibilityNodeInfo.ACTION_CLICK);
     }
 
