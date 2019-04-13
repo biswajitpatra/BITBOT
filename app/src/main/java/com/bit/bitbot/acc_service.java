@@ -201,13 +201,12 @@ public class acc_service extends AccessibilityService {
         String sspp[]=ssp.substring(1).split(".");
         AccessibilityNodeInfo cnd=nd;
         for(String z:sspp){
-
             nd=nd.getChild(Integer.getInteger(z));
             if(nd.isClickable())
                 cnd=nd;
         }
         if(clicka==true)
-        return cnd;
+            return cnd;
         else
             return nd;
     }
@@ -248,7 +247,11 @@ public class acc_service extends AccessibilityService {
         Log.v("::: trialclick",findnode(nb,param,""));
         shortestfn="";
         nb=getnode(nb,findnode(nb,param,""),true);
-        nb.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+        String textnb= nb.getViewIdResourceName();
+        if(nb.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+            Log.v("::: trialfopen successfully"," click"+textnb);
+        else
+            Log.v("::: trialfopen failed ","click"+textnb);
     }
 
     public void ftype(AccessibilityNodeInfo nb,String tt){

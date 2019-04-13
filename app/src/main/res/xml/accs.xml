@@ -4,7 +4,7 @@
     android:notificationTimeout="1000"
     android:settingsActivity="com.bit.bitbot.MainActivity"
     android:canRetrieveWindowContent="true"
-    android:accessibilityFlags="flagReportViewIds"
+    android:accessibilityFlags="flagReportViewIds|flagIncludeNotImportantViews|flagDefault|flagEnableAccessibilityVolume|flagRetrieveInteractiveWindows"
     android:canPerformGestures="true"
     />
 
